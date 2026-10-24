@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kampala Smart Traffic Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-800 px-6 py-3.5 flex justify-between items-center shadow-2xl z-20">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-red-600 to-orange-500 text-white p-2.5 rounded-xl shadow-lg shadow-red-500/20">
+                <i class="fa-solid fa-traffic-light text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Kampala Smart Traffic</h1>
+                <p class="text-xs text-slate-400 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></i></span> 
+                    Auto-updates in <span id="countdown" class="font-semibold text-emerald-400">05:00</span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Creator & Share -->
+        <div class="flex items-center space-x-3">
+            <button onclick="shareWebsite()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-700 transition flex items-center gap-2 shadow">
+                <i class="fa-solid fa-share-nodes text-emerald-400"></i> Share App
+            </button>
+            <div class="hidden md:flex items-center space-x-2 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800 shadow-inner">
+                <span class="text-xs text-slate-400">Creator: <strong class="text-emerald-400">Sempa Elvis</strong> <span class="text-[10px] text-slate-500">(Makerere Univ.)</span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Layout -->
+    <div class="flex flex-1 relative overflow-hidden">
+        
+        <!-- Sidebar Controls -->
+        <aside class="w-full md:w-[420px] bg-slate-900/95 backdrop-blur-md border-r border-slate-800 flex flex-col z-10 shadow-2xl overflow-y-auto">
+            
+            <!-- Mobile Creator Badge -->
+            <div class="md:hidden p-2.5 bg-slate-800/60 border-b border-slate-800 text-center text-xs text-slate-300">
+                Creator: <strong class="text-emerald-400">Sempa Elvis</strong> (Makerere Univ.)
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="grid grid-cols-4 border-b border-slate-800 text-xs font-semibold bg-slate-950/40">
+                <button onclick="switchTab('hotspots')" id="btn-hotspots" class="py-3 text-center border-b-2 border-red-500 text-red-400 bg-slate-800/50 transition">
+                    <i class="fa-solid fa-fire block mb-1 text-sm"></i> Jams
+                </button>
+                <button onclick="switchTab('routes')" id="btn-routes" class="py-3 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+                    <i class="fa-solid fa-route block mb-1 text-sm"></i> Routes
+                </button>
+                <button onclick="switchTab('report')" id="btn-report" class="py-3 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+                    <i class="fa-solid fa-camera block mb-1 text-sm"></i> Snap & Report
+                </button>
+                <button onclick="switchTab('reviews')" id="btn-reviews" class="py-3 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+                    <i class="fa-solid fa-comments block mb-1 text-sm"></i> Reviews
+                </button>
+            </div>
+
+            <!-- Tab Content: Hotspots -->
+            <div id="tab-hotspots" class="p-4 space-y-3 flex-1">
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Kampala Bottlenecks</h2>
+                    <span class="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded border border-red-500/20 font-medium">Real-Time Data</span>
+                </div>
+                
+                <div onclick="focusLocation(0.3156, 32.5816, 'Wandegeya Traffic Lights')" class="bg-slate-800/60 hover:bg-slate-800 p-3.5 rounded-2xl border border-slate-700/60 cursor-pointer transition shadow-sm group">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-200 group-hover:text-red-400 transition">Wandegeya Junction</h3>
+                        <span class="bg-red-500/20 text-red-400 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-red-500/30">Heavy Jam</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5">Heavy congestion coming from Bombo Road & Mulago Hospital stretch.</p>
+                </div>
+
+                <div onclick="focusLocation(0.3136, 32.5700, 'Makerere University Gate')" class="bg-slate-800/60 hover:bg-slate-800 p-3.5 rounded-2xl border border-slate-700/60 cursor-pointer transition shadow-sm group">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-200 group-hover:text-amber-400 transition">Makerere / Kivulu Gate</h3>
+                        <span class="bg-amber-500/20 text-amber-400 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-amber-500/30">Moderate</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5">Slow vehicle movement due to heavy student foot traffic and boda bodas.</p>
+                </div>
+
+                <div onclick="focusLocation(0.3090, 32.5760, 'Clock Tower Roundabout')" class="bg-slate-800/60 hover:bg-slate-800 p-3.5 rounded-2xl border border-slate-700/60 cursor-pointer transition shadow-sm group">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-200 group-hover:text-red-400 transition">Clock Tower Roundabout</h3>
+                        <span class="bg-red-500/20 text-red-400 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-red-500/30">Gridlock</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5">Entebbe Road and Katwe traffic merging bottleneck. Expect long delays.</p>
+                </div>
+
+                <div onclick="focusLocation(0.3476, 32.6031, 'Ntinda Junction')" class="bg-slate-800/60 hover:bg-slate-800 p-3.5 rounded-2xl border border-slate-700/60 cursor-pointer transition shadow-sm group">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-200 group-hover:text-amber-400 transition">Ntinda Complex</h3>
+                        <span class="bg-amber-500/20 text-amber-400 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-amber-500/30">Moderate</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5">Busy commercial hub traffic building up toward Ministers Village.</p>
+                </div>
+            </div>
+
+            <!-- Tab Content: Better Routes -->
+            <div id="tab-routes" class="p-4 space-y-3 hidden flex-1">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recommended Smart Bypasses</h2>
+                
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 shadow-sm">
+                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm mb-1.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Bypass Wandegeya Congestion</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">Use <strong class="text-slate-100">Sir Apollo Kaggwa Rd → Makerere Hill Rd → Kasubi</strong> to bypass central Wandegeya bottlenecks easily.</p>
+                </div>
+
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 shadow-sm">
+                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm mb-1.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Avoiding Clock Tower Jam</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">Take <strong class="text-slate-100">Ring Road → Mengo → Namirembe Road</strong> instead of going directly through Entebbe Road terminal.</p>
+                </div>
+
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 shadow-sm">
+                    <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm mb-1.5">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Ntinda to City Center Shortcut</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">Route via <strong class="text-slate-100">Bukoto-Ntinda Rd → Kisasi-Ntinda Rd → Kiira Road</strong> to save up to 20 minutes.</p>
+                </div>
+            </div>
+
+            <!-- Tab Content: Snap & Report Jam (With Camera) -->
+            <div id="tab-report" class="p-4 space-y-3 hidden flex-1">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Snap Photo & Report Jam</h2>
+                <form id="report-form" onsubmit="submitReport(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Area / Landmark Name</label>
+                        <input type="text" id="report-loc" required placeholder="e.g., Nakawa Junction, Acacia Mall" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-red-500 shadow-inner">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Traffic Severity Level</label>
+                        <select id="report-severity" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-red-500 shadow-inner">
+                            <option value="Heavy">🔴 Heavy Gridlock / Jam</option>
+                            <option value="Moderate">🟡 Moderate Slowdown</option>
+                            <option value="Clear">🟢 Flowing Smoothly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Take or Upload Traffic Photo</label>
+                        <input type="file" id="report-photo" accept="image/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 file:cursor-pointer border border-slate-700 rounded-xl p-2 bg-slate-950">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Additional Details</label>
+                        <textarea id="report-desc" rows="2" placeholder="e.g., Heavy truck breakdown blocking one lane" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-red-500 shadow-inner"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold py-3 rounded-xl text-sm transition shadow-lg shadow-red-600/20">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Publish Live Report
+                    </button>
+                </form>
+                <div id="report-success" class="hidden bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs text-center p-3 rounded-xl font-medium mt-2">
+                    <i class="fa-solid fa-check-circle mr-1"></i> Traffic update and photo published successfully!
+                </div>
+            </div>
+
+            <!-- Tab Content: Reviews & Feedback -->
+            <div id="tab-reviews" class="p-4 space-y-3 hidden flex-1">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Driver Reviews & Feedback</h2>
+                <form id="review-form" onsubmit="submitReview(event)" class="space-y-3 bg-slate-800/40 p-3.5 rounded-2xl border border-slate-800">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Your Name</label>
+                        <input type="text" id="review-name" required placeholder="e.g., Kato John" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Your Message / Review</label>
+                        <textarea id="review-text" rows="2" required placeholder="Helpful app! Saved me from Wandegeya jam today." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow">
+                        Send Review
+                    </button>
+                </form>
+                <div id="reviews-list" class="space-y-2 mt-3">
+                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 text-xs">
+                        <strong class="text-emerald-400">Kasule Brian:</strong> Great tracker for Kampala roads! The bypass routes really work.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Branding -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 text-center text-xs text-slate-400">
+                Designed & Built by <span class="text-slate-200 font-semibold">Sempa Elvis</span><br>
+                <span class="text-[11px] text-slate-500">Makerere University Faculty of Computing</span>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main class="flex-1 h-full relative">
+            <div id="map" class="w-full h-full"></div>
+        </main>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Initialize Map centered on Kampala
+        const map = L.map('map').setView([0.3136, 32.5811], 14);
+
+        // Add Dark Theme Tile Layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap & CARTO',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Preloaded Hotspots
+        const hotspots = [
+            { name: "Wandegeya Junction", lat: 0.3156, lng: 32.5816, status: "Heavy Jam", desc: "Heavy congestion coming from Bombo Road & Mulago." },
+            { name: "Makerere University Gate", lat: 0.3136, lng: 32.5700, status: "Moderate", desc: "Slow movement due to pedestrian crossing & bodas." },
+            { name: "Clock Tower Roundabout", lat: 0.3090, lng: 32.5760, status: "Gridlock", desc: "Entebbe Road & Katwe traffic merging bottleneck." },
+            { name: "Ntinda Complex", lat: 0.3476, lng: 32.6031, status: "Moderate", desc: "Busy commercial hub traffic during evening hours." },
+            { name: "Jinja Road (Lugogo)", lat: 0.3200, lng: 32.6100, status: "Heavy Jam", desc: "Inbound traffic towards town center." }
+        ];
+
+        hotspots.forEach(spot => {
+            let color = spot.status === "Gridlock" ? "#ef4444" : (spot.status === "Heavy Jam" ? "#f97316" : "#eab308");
+            const customIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px ${color};"></div>`,
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+            L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map)
+              .bindPopup(`<div style="color: #0f172a; font-family: sans-serif;"><strong>${spot.name}</strong><br><span style="color: ${color}; font-weight: bold;">Status: ${spot.status}</span><br>${spot.desc}</div>`);
+        });
+
+        function focusLocation(lat, lng, name) {
+            map.setView([lat, lng], 16, { animate: true });
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            ['hotspots', 'routes', 'report', 'reviews'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`btn-${t}`).classList.remove('border-red-500', 'text-red-400', 'bg-slate-800/50');
+                document.getElementById(`btn-${t}`).classList.add('border-transparent', 'text-slate-400');
+            });
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`btn-${tabName}`).classList.add('border-red-500', 'text-red-400', 'bg-slate-800/50');
+            document.getElementById(`btn-${tabName}`).classList.remove('border-transparent', 'text-slate-400');
+        }
+
+        // Auto-refresh Timer (5 Minutes)
+        let timeLeft = 300;
+        setInterval(() => {
+            timeLeft--;
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('countdown').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            if (timeLeft <= 0) {
+                location.reload(); // Auto refresh page to fetch latest state
+            }
+        }, 1000);
+
+        // Share Website Function
+        function shareWebsite() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Kampala Smart Traffic Tracker',
+                    text: 'Check out this live Kampala traffic jam tracker and route finder built by Sempa Elvis!',
+                    url: window.location.href,
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Website link copied to clipboard! You can now paste and send it to others.');
+            }
+        }
+
+        // Handle Form Submission with Photo Handling
+        function submitReport(e) {
+            e.preventDefault();
+            const locationName = document.getElementById('report-loc').value;
+            const severity = document.getElementById('report-severity').value;
+            const description = document.getElementById('report-desc').value;
+            const photoInput = document.getElementById('report-photo');
+
+            let photoHTML = '';
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addMarkerWithPhoto(locationName, severity, description, e.target.result);
+                }
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                addMarkerWithPhoto(locationName, severity, description, null);
+            }
+        }
+
+        function addMarkerWithPhoto(locationName, severity, description, photoUrl) {
+            const randomLat = 0.3136 + (Math.random() - 0.5) * 0.04;
+            const randomLng = 32.5811 + (Math.random() - 0.5) * 0.04;
+            let color = severity === "Heavy" ? "#ef4444" : (severity === "Moderate" ? "#f97316" : "#22c55e");
+
+            const customIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 12px ${color};"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+
+            let popupContent = `<div style="color: #0f172a; font-family: sans-serif; max-width: 200px;"><strong>[Live Report] ${locationName}</strong><br><span style="color: ${color}; font-weight: bold;">Status: ${severity}</span><br>${description}`;
+            if (photoUrl) {
+                popupContent += `<br><img src="${photoUrl}" style="width: 100%; height: 100px; object-fit: cover; margin-top: 6px; border-radius: 6px;" />`;
+            }
+            popupContent += `</div>`;
+
+            L.marker([randomLat, randomLng], { icon: customIcon })
+              .addTo(map)
+              .bindPopup(popupContent)
+              .openPopup();
+
+            map.setView([randomLat, randomLng], 15);
+            document.getElementById('report-form').reset();
+            const successMsg = document.getElementById('report-success');
+            successMsg.classList.remove('hidden');
+            setTimeout(() => successMsg.classList.add('hidden'), 4000);
+        }
+
+        // Handle Review Submission
+        function submitReview(e) {
+            e.preventDefault();
+            const name = document.getElementById('review-name').value;
+            const text = document.getElementById('review-text').value;
+            const list = document.getElementById('reviews-list');
+
+            const newReview = document.createElement('div');
+            newReview.className = "bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 text-xs";
+            newReview.innerHTML = `<strong class="text-emerald-400">${name}:</strong> ${text}`;
+            list.prepend(newReview);
+
+            document.getElementById('review-form').reset();
+            alert('Thank you for your review!');
+        }
+    </script>
+</body>
+</html>
